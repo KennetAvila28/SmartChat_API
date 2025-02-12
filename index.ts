@@ -1,11 +1,24 @@
 import express from "express"
 import {createServer} from "node:http"
+import { join } from "node:path"
 import {Server} from "socket.io"
+import cors from "cors"
+import { v4 } from "uuid"
 const app = express()
 const server = createServer(app)
-const io = new Server(server)
+const io = new Server(server, {cors:{
+    origin:"*"
+}})
+app.use(cors({
+    origin: "*",
+    allowedHeaders:"*"
+}))
 app.get("/", (_, res)=>{
-    res.send("<h1>Server is running</h1>")
+    res.sendFile(join(__dirname, 'index.html'));
+})
+
+app.get("/notification.mp3", (_, res)=>{
+    res.sendFile(join(__dirname, 'notification.mp3'));
 })
 
 server.listen(3000, ()=> {
@@ -14,7 +27,14 @@ server.listen(3000, ()=> {
 })
 
 io.on("connection", (socket)=>{
-    socket.on("message",()=>{
+    console.log(socket.id)
+    socket.on(socket.id,(message, dest)=>{
         
+        io.emit(dest, message)
     })
+    const setup =  {
+        id:socket.id,
+        pass:"Hello"
+    }
+    socket.emit("setup",JSON.stringify(setup))
 })

@@ -3,7 +3,7 @@
   "module": "index.ts",
   "type": "module",
   "scripts": {
-    "dev": "bun run index.ts --watch"
+    "dev": "bun run index.ts --hot"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -13,7 +13,9 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^4.21.2",
-    "socket.io": "^4.8.1"
+    "socket.io": "^4.8.1",
+    "uuid": "^11.0.5"
   }
 }
