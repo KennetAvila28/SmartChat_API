@@ -72,42 +72,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.8.1/socket.io.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script type="module" text="text/javascript">
-const socket = io("http://10.1.147.230:3000")
-    const form = document.getElementById('form');
-    const input = document.getElementById('input');
-    const messages = document.getElementById('messages');
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        if (input.value) {
-            socket.emit(localStorage.getItem("conver"), input.value);
-            addMessage(input.value)
-            input.value = '';
-        }
-    });
-    socket.on("setup", (arg) => {
-        const setup = JSON.parse(arg)
-        for (let prop in setup) {
-            localStorage.setItem(prop, setup[prop])
-        }
-        console.log("setup complete")
-    })
-    // socket.on('answer', (msg) => {
-    //     console.log('answer',msg)
-    //     const item = document.createElement('li');
-    //     item.textContent = msg;
-    //     messages.appendChild(item);
-    //     window.scrollTo(0, document.body.scrollHeight);
-    // });
-  
 
-    socket.on(localStorage.getItem('id'), (msg) => {
-        playSound("notification.mp3")
-        console.log("message", msg)
-        addMessage(msg)
-    });
-    const addMessage = (text) => {
+    const addMessage = (text, from) => {
         const item = document.createElement('li');
-        item.textContent = text;
+        item.textContent = from+ ": "+text;
         messages.appendChild(item);
         window.scrollTo(0, document.body.scrollHeight);
     }
@@ -116,24 +84,83 @@ const socket = io("http://10.1.147.230:3000")
         audio.play();
     }
     document.addEventListener("DOMContentLoaded", async () => {
-        const { value: id } = await Swal.fire({
-            title: "Enter the conversation identifier",
+        const socket = io("https://7798-2806-10be-c-f81c-b556-3e04-b41e-d7cd.ngrok-free.app")
+        const name = localStorage.getItem("name")
+        if (!name) {
+            await checkName()
+        }
+
+        
+        const form = document.getElementById('form');
+        const input = document.getElementById('input');
+        const messages = document.getElementById('messages');
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (input.value) {
+                socket.emit("message", input.value, localStorage.getItem("conver"), localStorage.getItem("name"));
+                addMessage(input.value, localStorage.getItem("name"))
+                input.value = '';
+            }
+        });
+        socket.on("setup", (arg) => {
+            const setup = JSON.parse(arg)
+            for (let prop in setup) {
+                localStorage.setItem(prop, setup[prop])
+            }
+            console.log("setup complete")
+        })
+        // socket.on('answer', (msg) => {
+        //     console.log('answer',msg)
+        //     const item = document.createElement('li');
+        //     item.textContent = msg;
+        //     messages.appendChild(item);
+        //     window.scrollTo(0, document.body.scrollHeight);
+        // });
+
+
+        socket.on(localStorage.getItem('name'), (msg, from) => {
+            playSound("notification.mp3")
+            console.log("message", msg)
+            const conver = localStorage.getItem("conver")
+            if (!conver) {
+                localStorage.setItem("conver", from)
+            }
+            addMessage(msg,from)
+        });
+    })
+    const checkName = async () => {
+        const { value: username } = await Swal.fire({
+            title: "Enter the username",
             input: "text",
             icon: "info",
             inputValidator: (value) => {
                 if (!value)
-                    return "you need identifier to start the conversation"
+                    return "you need a username"
+            }
+
+        })
+        if (username) {
+            localStorage.setItem("name", username)
+        }
+        await init()
+    }
+    const init = async () => {
+        const { value: username } = await Swal.fire({
+            title: "you can start the conversation with the username ",
+            input: "text",
+            icon: "info",
+            inputValidator: (value) => {
+                if (!value)
+                    return "you need username to start the conversation"
             }
         })
-        if (id) {
-            console.log(id)
-            localStorage.setItem("conver", id)
-            socket.emit(id, "open")
+        if (username) {
+            console.log(username)
+            localStorage.setItem("conver", username)
+            // socket.emit(username, "open")
         }
+    }
 
-
-    })
-    
 </script>
 
 </html>
